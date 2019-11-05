@@ -2,3 +2,10 @@
 MERAKI_API_KEY = "YYYYYYYYYYYYYYYYYYYYYYY"
 ORG_ID = "XXXXXXXX"
 validator = "ZZZZZZZZZZZZZZ"
+
+#these are the parameters and thresholds used by the cmxsummary.py script
+initialRSSIThreshold=15
+visitorRSSIThreshold=10
+maxSecondsAwayNewVisit=120
+minMinutesVisit=5
+theTimeZone='US/Central'

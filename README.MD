@@ -60,3 +60,5 @@ https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-sca
 4. Ensure all elements of the config.py file are completed
 5. Ensure ngrok is running and that the url matches what is in the Meraki Dashboard (./ngrok http 5000)
 6. In a new terminal window, enter ‘python3 cmxreceiver.py’ (note at this point the validate button in the Meraki dashboard should be working, data will stream every minute or so)
+7. Once you are done collecting observactions with the cmxreceiver.py script or while collecting, you can run the cmxsummary.py script to generate
+the list of unique visitors in cmxSummary.csv. To run it, enter ‘python3 cmxsummary.py’ in the command line.
