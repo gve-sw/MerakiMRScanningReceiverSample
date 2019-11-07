@@ -39,7 +39,7 @@ if __name__ == '__main__':
             #first check to see if we have seen this potential visitor
             if newMAC in theObservations:
                 # if we have seen it, check to see if this record is from a different AP at the same time
-                if theObservations[newMAC]['latest_ts']==row['time']:
+                if theObservations[newMAC]['latest_ts']==int(row['time']):
                     #if so, assign the largest RSSI to the data structure we keep in memory so we do not make a decision
                     #about the end of a visit based on an API that is not the one closest to the visitor
                     theObservations[newMAC]['latest_rssi']=max(int(row['rssi']),theObservations[newMAC]['latest_rssi'])
@@ -68,7 +68,8 @@ if __name__ == '__main__':
         for theKey in theObservations:
             theTime=datetime.fromtimestamp(theObservations[theKey]['first_ts'])
             theLocalTime=theTime.astimezone(localTZ)
-            theVisitLength=(theObservations[theKey]['latest_ts']-theObservations[theKey]['first_ts']) % 60
+            theDeltaSeconds=theObservations[theKey]['latest_ts']-theObservations[theKey]['first_ts']
+            theVisitLength=round(theDeltaSeconds / 60,2)
             if theVisitLength>=minMinutesVisit:
                 writer.writerow({'NETNAME': theObservations[theKey]['netname'],
                                  'MAC': theKey,
