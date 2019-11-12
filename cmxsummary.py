@@ -47,12 +47,12 @@ if __name__ == '__main__':
                     # if not the same, there is a new timestamp for the same unique client ID, so we must update the
                     # latest_ts and latest_rssi fields, but only if above the rssi threshold to still consider a visitor
                     # and the new timestamp cannot be more than maxSecondsAwayNewVisit from the latest recorded
-                    if int(row['rssi'])>visitorRSSIThreshold and (int(row['time'])-theObservations[newMAC]['latest_ts'])<=maxSecondsAwayNewVisit:
+                    if int(row['rssi'])>=visitorRSSIThreshold and (int(row['time'])-theObservations[newMAC]['latest_ts'])<=maxSecondsAwayNewVisit:
                         theObservations[newMAC]['latest_ts'] = int(row['time'])
                         theObservations[newMAC]['latest_rssi'] = int(row['rssi'])
             else:
                 #if we have not seen it , time to create a new entry if the RSSI is larger than initialRSSIThreshold
-                if int(row['rssi'])>initialRSSIThreshold:
+                if int(row['rssi'])>=initialRSSIThreshold:
                     theObservations[newMAC]={}
                     theObservations[newMAC]['first_ts']=int(row['time'])
                     theObservations[newMAC]['latest_ts'] = int(row['time'])
