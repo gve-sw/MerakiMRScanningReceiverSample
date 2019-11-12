@@ -39,25 +39,42 @@ if __name__ == '__main__':
             #first check to see if we have seen this potential visitor
             if newMAC in theObservations:
                 # if we have seen it, check to see if this record is from a different AP at the same time
-                if theObservations[newMAC]['latest_ts']==int(row['time']):
+                # focus on the latest visit from the visits array o the observation
+                if theObservations[newMAC][-1]['latest_ts']==int(row['time']):
                     #if so, assign the largest RSSI to the data structure we keep in memory so we do not make a decision
                     #about the end of a visit based on an API that is not the one closest to the visitor
-                    theObservations[newMAC]['latest_rssi']=max(int(row['rssi']),theObservations[newMAC]['latest_rssi'])
+                    theObservations[newMAC][-1]['latest_rssi']=max(int(row['rssi']),theObservations[newMAC][-1]['latest_rssi'])
                 else:
-                    # if not the same, there is a new timestamp for the same unique client ID, so we must update the
+                    # if not the same, there is a new timestamp for the same unique client ID, so we must check against
+                    # let latest visit in the array and update the
                     # latest_ts and latest_rssi fields, but only if above the rssi threshold to still consider a visitor
                     # and the new timestamp cannot be more than maxSecondsAwayNewVisit from the latest recorded
-                    if int(row['rssi'])>=visitorRSSIThreshold and (int(row['time'])-theObservations[newMAC]['latest_ts'])<=maxSecondsAwayNewVisit:
-                        theObservations[newMAC]['latest_ts'] = int(row['time'])
-                        theObservations[newMAC]['latest_rssi'] = int(row['rssi'])
+                    # if it is, then we have to add a new visit record to the array
+                    if int(row['rssi'])>=visitorRSSIThreshold:
+                        if (int(row['time'])-theObservations[newMAC][-1]['latest_ts'])<=maxSecondsAwayNewVisit:
+                            theObservations[newMAC][-1]['latest_ts'] = int(row['time'])
+                            theObservations[newMAC][-1]['latest_rssi'] = int(row['rssi'])
+                        elif int(row['rssi'])>=initialRSSIThreshold:
+                            #this is a new visit (also checked RSSI above new visti threshold), append new entry to
+                            # the array of visits with all relevant values
+                            newVisit={}
+                            newVisit['first_ts'] = int(row['time'])
+                            newVisit['latest_ts'] = int(row['time'])
+                            newVisit['latest_rssi'] = int(row['rssi'])
+                            newVisit['netname'] = row['NETNAME']
+                            theObservations[newMAC].append(newVisit)
+
             else:
-                #if we have not seen it , time to create a new entry if the RSSI is larger than initialRSSIThreshold
+                #if we have not seen it , time to create a visits array for that MAC if the RSSI is larger than initialRSSIThreshold
                 if int(row['rssi'])>=initialRSSIThreshold:
-                    theObservations[newMAC]={}
-                    theObservations[newMAC]['first_ts']=int(row['time'])
-                    theObservations[newMAC]['latest_ts'] = int(row['time'])
-                    theObservations[newMAC]['latest_rssi'] = int(row['rssi'])
-                    theObservations[newMAC]['netname'] = row['NETNAME']
+                    theObservations[newMAC]=[]
+                    firstVisit= {}
+                    firstVisit['first_ts']=int(row['time'])
+                    firstVisit['latest_ts'] = int(row['time'])
+                    firstVisit['latest_rssi'] = int(row['rssi'])
+                    firstVisit['netname'] = row['NETNAME']
+                    theObservations[newMAC].append(firstVisit)
+
 
     print("Done reading and mapping, starting to generate summary file...")
 
@@ -66,16 +83,17 @@ if __name__ == '__main__':
         localTZ = timezone(theTimeZone)
         writer = csv.DictWriter(csvoutputfile, fieldnames=fieldnamesout)
         for theKey in theObservations:
-            theTime=datetime.fromtimestamp(theObservations[theKey]['first_ts'])
-            theLocalTime=theTime.astimezone(localTZ)
-            theDeltaSeconds=theObservations[theKey]['latest_ts']-theObservations[theKey]['first_ts']
-            theVisitLength=round(theDeltaSeconds / 60,2)
-            if theVisitLength>=minMinutesVisit:
-                writer.writerow({'NETNAME': theObservations[theKey]['netname'],
-                                 'MAC': theKey,
-                                 'date': theLocalTime.strftime('%m/%d/%Y'),
-                                 'time': theLocalTime.strftime('%H:%M'),
-                                 'length': theVisitLength})
+            for theVisitInstance in theObservations[theKey]:
+                theTime=datetime.fromtimestamp(theVisitInstance['first_ts'])
+                theLocalTime=theTime.astimezone(localTZ)
+                theDeltaSeconds=theVisitInstance['latest_ts']-theVisitInstance['first_ts']
+                theVisitLength=round(theDeltaSeconds / 60,2)
+                if theVisitLength>=minMinutesVisit:
+                    writer.writerow({'NETNAME': theVisitInstance['netname'],
+                                     'MAC': theKey,
+                                     'date': theLocalTime.strftime('%m/%d/%Y'),
+                                     'time': theLocalTime.strftime('%H:%M'),
+                                     'length': theVisitLength})
 
     print("Summary File generated.")
 
