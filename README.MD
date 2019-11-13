@@ -3,20 +3,34 @@
 This application receives telemetry from the Meraki Scanning API and stores it in plain text
 using CSV format in the cmxData.csv file.
 
-It stores the following for each "observation" it receives (one row per observation):
+It stores the following for each "observation" it receives (one row per observation) in a file named 'cmxData.csv':
 
 Network Name, Access Point Name, Access Point MAC, Client MAC, Timestamp, RSSI
+
+
+The **Network Name** and **Access Point Name** are retrieved when when script first runs since it creates a map of all MR devices from all networks
+in the organization defined in the ORG_ID variable in the config.py file.
 
 More details on the Access Point MAC, Client MAC, Timestamp and RSSI fields can be found here:
 https://developer.cisco.com/meraki/scanning-api/#!api-version-2-0/wifi-devices
 
-The **Network Name** and **Access Point Name** are retrieved when when script first runs since it creates a map of all MR devices from all networks
-in the organization defined in the ORG_ID variable in the config.py file.
+The 'cmxSummary.csv' file, which gets generated after running the cmxsummary.py script, contains the following for each row:
+
+Network Name, Client MAC, Visit Date (timezone adjusted), Visit Time (timezone adjusted), Visit Length (minutes)
+
+
 
 
 ## Configuration
 
 **Config.py** contains all of the global variables and configuration needed throughout the code, including keys and thresholds.
+
+initialRSSIThreshold: RSSI (wifi signal strengh) value to test for before registering the start of a visit
+visitorRSSIThreshold: RSSI (wifi signal strengh) value to test for to consider if a device is still within the premises
+maxSecondsAwayNewVisit: Number of seconds to tolerate that a device being tracked as part of a visit is not included in any observation from any of the access points in a network
+minMinutesVisit: Number of minutes that a visitor's device is seen to record an actual visit to the premises.
+theTimeZone: Timezone to use when generating the timestams in the cmxSummary.csv output file
+
 
 ——------ CMX Access point Setup ------——
 Cisco Meraki CMX Receiver is a simple example demonstrating how to interact with the CMX API.
