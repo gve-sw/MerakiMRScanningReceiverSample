@@ -25,11 +25,12 @@ Network Name, Client MAC, Visit Date (timezone adjusted), Visit Time (timezone a
 What constitutes a "visit" is determined by an algorithm that uses the initialRSSIThreshold, visitorRSSIThreshold, maxSecondsAwayNewVisit,
 minMinutesVisit and theTimeZone variables as follows:
 <br/>
-initialRSSIThreshold: RSSI (wifi signal strengh) value to test for before registering the start of a visit<br/>
-visitorRSSIThreshold: RSSI (wifi signal strengh) value to test for to consider if a device is still within the premises<br/>
-maxSecondsAwayNewVisit: Number of seconds to tolerate that a device being tracked as part of a visit is not included in any observation from any of the access points in a network<br/>
-minMinutesVisit: Number of minutes that a visitor's device is seen to record an actual visit to the premises.<br/>
-theTimeZone: Timezone to use when generating the timestams in the cmxSummary.csv output file<br/>
+<br/>
+**initialRSSIThreshold**: RSSI (wifi signal strengh) value to test for before registering the start of a visit<br/>
+**visitorRSSIThreshold**: RSSI (wifi signal strengh) value to test for to consider if a device is still within the premises<br/>
+**maxSecondsAwayNewVisit**: Number of seconds to tolerate that a device being tracked as part of a visit is not included in any observation from any of the access points in a network<br/>
+**minMinutesVisit**: Number of minutes that a visitor's device is seen to record an actual visit to the premises.<br/>
+**theTimeZone**: Timezone to use when generating the timestams in the cmxSummary.csv output file<br/>
 
 ## Configuration
 
