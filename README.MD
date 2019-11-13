@@ -1,4 +1,4 @@
-# Meraki MX Analytics Telemetry receiver demo
+# Meraki MR Analytics Telemetry receiver demo
 
 This application receives telemetry from the Meraki Scanning API and stores it in plain text
 using CSV format in the cmxData.csv file.
