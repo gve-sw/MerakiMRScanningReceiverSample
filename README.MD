@@ -1,12 +1,16 @@
 # Meraki MR Analytics Telemetry receiver demo
 
-This application receives telemetry from the Meraki Scanning API and stores it in plain text
-using CSV format in the cmxData.csv file.
+These python scripts recieve telemetry from the Meraki Scanning API and stores it in plain text
+using CSV format in the cmxData.csv file. It also generates a list of "visits" based on WiFi enabled devices detected
+entering and leaving the area covered by the MR access points and stores it in a file named cmxSummary.csv
 
-It stores the following for each "observation" it receives (one row per observation) in a file named 'cmxData.csv':
+This information can be used to build a much more customized variant of the Meraki Dashboard Analytics reports for location
+since it can be fed into solutions like Tableau for detailed processing.
+
+To be able to calculates visits, the application stores the following for each "observation" it receives (one row per observation)
+in a file named 'cmxData.csv':
 
 Network Name, Access Point Name, Access Point MAC, Client MAC, Timestamp, RSSI
-
 
 The **Network Name** and **Access Point Name** are retrieved when when script first runs since it creates a map of all MR devices from all networks
 in the organization defined in the ORG_ID variable in the config.py file.
@@ -18,19 +22,19 @@ The 'cmxSummary.csv' file, which gets generated after running the cmxsummary.py 
 
 Network Name, Client MAC, Visit Date (timezone adjusted), Visit Time (timezone adjusted), Visit Length (minutes)
 
-
-
+What constitutes a "visit" is determined by an algorithm that uses the initialRSSIThreshold, visitorRSSIThreshold, maxSecondsAwayNewVisit,
+minMinutesVisit and theTimeZone variables as follows:
+<br/>
+initialRSSIThreshold: RSSI (wifi signal strengh) value to test for before registering the start of a visit<br/>
+visitorRSSIThreshold: RSSI (wifi signal strengh) value to test for to consider if a device is still within the premises<br/>
+maxSecondsAwayNewVisit: Number of seconds to tolerate that a device being tracked as part of a visit is not included in any observation from any of the access points in a network<br/>
+minMinutesVisit: Number of minutes that a visitor's device is seen to record an actual visit to the premises.<br/>
+theTimeZone: Timezone to use when generating the timestams in the cmxSummary.csv output file<br/>
 
 ## Configuration
 
-**Config.py** contains all of the global variables and configuration needed throughout the code, including keys and thresholds.
-
-initialRSSIThreshold: RSSI (wifi signal strengh) value to test for before registering the start of a visit
-visitorRSSIThreshold: RSSI (wifi signal strengh) value to test for to consider if a device is still within the premises
-maxSecondsAwayNewVisit: Number of seconds to tolerate that a device being tracked as part of a visit is not included in any observation from any of the access points in a network
-minMinutesVisit: Number of minutes that a visitor's device is seen to record an actual visit to the premises.
-theTimeZone: Timezone to use when generating the timestams in the cmxSummary.csv output file
-
+**Config.py** contains all of the global variables and configuration needed throughout the code, including keys and thresholds such as initialRSSIThreshold, visitorRSSIThreshold, maxSecondsAwayNewVisit,
+minMinutesVisit and theTimeZone.
 
 ——------ CMX Access point Setup ------——
 Cisco Meraki CMX Receiver is a simple example demonstrating how to interact with the CMX API.
