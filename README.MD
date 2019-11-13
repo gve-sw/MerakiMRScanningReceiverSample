@@ -67,7 +67,7 @@ https://documentation.meraki.com/MR/Monitoring_and_Reporting/CMX_Analytics#CMX_L
 4. Copy and paste this url into the “Post URL” section of “Location and Analytics” in the Meraki Dashboard
 5. Note that the validate button should fail at this point as the the cmx receiver is not up and running
 
-More details on conguring the Meraki Dashboard for the Scanning API can be found here:
+More details on configuring the Meraki Dashboard for the Scanning API can be found here:
 https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-scanning-api
 
 
@@ -79,5 +79,5 @@ https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-sca
 4. Ensure all elements of the config.py file are completed
 5. Ensure ngrok is running and that the url matches what is in the Meraki Dashboard (./ngrok http 5000)
 6. In a new terminal window, enter ‘python3 cmxreceiver.py’ (note at this point the validate button in the Meraki dashboard should be working, data will stream every minute or so)
-7. Once you are done collecting observactions with the cmxreceiver.py script or while collecting, you can run the cmxsummary.py script to generate
+7. Once you are done collecting observations with the cmxreceiver.py script or while collecting, you can run the cmxsummary.py script to generate
 the list of unique visitors in cmxSummary.csv. To run it, enter ‘python3 cmxsummary.py’ in the command line.
