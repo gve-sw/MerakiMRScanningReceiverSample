@@ -1,8 +1,8 @@
 # Meraki MR Analytics Telemetry receiver demo
 
 These python scripts recieve telemetry from the Meraki Scanning API and stores it in plain text
-using CSV format in the cmxData.csv file. It also generates a list of "visits" based on WiFi enabled devices detected
-entering and leaving the area covered by the MR access points and stores it in a file named cmxSummary.csv
+using CSV format in the **cmxData.csv** file. It also generates a list of "visits" based on WiFi enabled devices detected
+entering and leaving the area covered by the MR access points and stores it in a file named **cmxSummary.csv**
 <br/>
 <br/>
 This information can be used to build a much more customized variant of the Meraki Dashboard Analytics reports for location
@@ -10,7 +10,7 @@ since it can be fed into solutions like Tableau for detailed processing.
 <br/>
 <br/>
 To be able to calculates visits, the application stores the following for each "observation" it receives (one row per observation)
-in a file named 'cmxData.csv':
+in a file named **cmxData.csv**:
 <br/>
 <br/>
 ```Network Name, Access Point Name, Access Point MAC, Client MAC, Timestamp, RSSI```
@@ -52,9 +52,9 @@ minMinutesVisit and theTimeZone.
 <br/><br/>
 In that file, you must fill in the values for the following variables:
 <br/><br/>
-MERAKI_API_KEY: This should contain your Meraki API key (details at https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-scanning-api)<br/>
-ORG_ID: This is the Organization ID you wish to use from which to consider all encompassing networks to search for cameras.<br/>
-validator: The validator key that can be found in the Meraki dashboard by navigating to **Network-wide > General. Scroll down to “Location and Analytics” to copy and paste this validator key into code (ensure analytics and scanning API are enabled)<br/>
+**MERAKI_API_KEY**: This should contain your Meraki API key (details at https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-scanning-api)<br/>
+**ORG_ID**: This is the Organization ID you wish to use from which to consider all encompassing networks to search for cameras.<br/>
+**validator**: The validator key that can be found in the Meraki dashboard by navigating to **Network-wide > General. Scroll down to “Location and Analytics” to copy and paste this validator key into code (ensure analytics and scanning API are enabled)<br/>
 
 
 ---
@@ -77,7 +77,7 @@ https://documentation.meraki.com/MR/Monitoring_and_Reporting/CMX_Analytics#CMX_L
 ---
 ## Local machine configuration
 
-The cmxreceiver.py python script implements a web server that needs to have a publicly addressable address so that it can
+The **cmxreceiver.py** python script implements a web server that needs to have a publicly addressable address so that it can
 be configured as a webhook on the Meraki Dashboard API. If you wish to run it on a machine behind a corporate firewall such as a
 PC or laptop connected to a corporate network you need to use a utility such as Ngrok to open a "pinhole" on the firewall to be able
 to redirect traffic to the script. Not all organizations support the use of ngrok or other similar utilities and it is definietely not
