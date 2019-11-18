@@ -40,9 +40,9 @@ is used by Meraki for the location analytics reports in the Dashboard<br/><br/>
 is used by Meraki for the location analytics reports in the Dashboard<br/><br/>
 **maxSecondsAwayNewVisit**: Number of seconds to tolerate that a device being tracked as part of a visit is not included in any observation from any of the access points in a network.
 We suggest 120 seconds just to give chance in case one "observations" report is not succesfully send and received <br/><br/>
-**minMinutesVisit**: Number of minutes that a visitor's device is seen to record an actual visit to the premises. A value of 5 seconds is adequate for many retail situations
+**minMinutesVisit**: Number of minutes that a visitor's device is seen to record an actual visit to the premises. A value of 5 minutes is adequate for many retail situations
 but really depends on the nature of the business.<br/><br/>
-**theTimeZone**: Timezone to use when generating the timestams in the cmxSummary.csv output file<br/><br/>
+**theTimeZone**: Timezone to use when generating the timestams in the **cmxSummary.csv** output file<br/><br/>
 
 ---
 ## Configuration
