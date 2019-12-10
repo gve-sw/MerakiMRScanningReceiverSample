@@ -22,8 +22,15 @@ import sys, getopt
 from datetime import datetime
 import csv
 import shutil
-import json, requests
+import json, requests, os
 from config import ORG_ID, MERAKI_API_KEY, validator
+
+from pytz import timezone
+from config import initialRSSIThreshold, visitorRSSIThreshold, maxSecondsAwayNewVisit, minMinutesVisit, theTimeZone, summaryTimePeriod
+
+csvinputfile = None
+csvoutputfile = None
+
 
 ############## USER DEFINED SETTINGS ###############
 # MERAKI SETTINGS
@@ -32,6 +39,82 @@ version = "2.0" # This code was written to support the CMX JSON version specifie
 csvfile = None
 devicesMapper={}
 apNames={}
+
+
+def generateSummaryFile(fileTS):
+
+    theObservations = {}
+    fieldnamesin = ['NETNAME', 'APNAME', 'APMAC', 'MAC', 'time', 'rssi']
+    os.rename(r'cmxData.csv',
+              r'cmxData' + fileTS + '.csv')
+    with open('cmxData' + fileTS + '.csv', newline='') as csvinputfile:
+        datareader = csv.DictReader(csvinputfile, fieldnames=fieldnamesin)
+        for row in datareader:
+            # print(row['NETNAME'], row['APNAME'],row['APMAC'], row['MAC'], row['time'], row['rssi'])
+            # assigning client MAC address from the row from the input file to a separate variable for better
+            # readability of the code
+            newMAC = row['MAC']
+            # first check to see if we have seen this potential visitor
+            if newMAC in theObservations:
+                # if we have seen it, check to see if this record is from a different AP at the same time
+                # focus on the latest visit from the visits array o the observation
+                if theObservations[newMAC][-1]['latest_ts'] == int(row['time']):
+                    # if so, assign the largest RSSI to the data structure we keep in memory so we do not make a decision
+                    # about the end of a visit based on an API that is not the one closest to the visitor
+                    theObservations[newMAC][-1]['latest_rssi'] = max(int(row['rssi']),
+                                                                     theObservations[newMAC][-1]['latest_rssi'])
+                else:
+                    # if not the same, there is a new timestamp for the same unique client ID, so we must check against
+                    # let latest visit in the array and update the
+                    # latest_ts and latest_rssi fields, but only if above the rssi threshold to still consider a visitor
+                    # and the new timestamp cannot be more than maxSecondsAwayNewVisit from the latest recorded
+                    # if it is, then we have to add a new visit record to the array
+                    if int(row['rssi']) >= visitorRSSIThreshold:
+                        if (int(row['time']) - theObservations[newMAC][-1]['latest_ts']) <= maxSecondsAwayNewVisit:
+                            theObservations[newMAC][-1]['latest_ts'] = int(row['time'])
+                            theObservations[newMAC][-1]['latest_rssi'] = int(row['rssi'])
+                        elif int(row['rssi']) >= initialRSSIThreshold:
+                            # this is a new visit (also checked RSSI above new visti threshold), append new entry to
+                            # the array of visits with all relevant values
+                            newVisit = {}
+                            newVisit['first_ts'] = int(row['time'])
+                            newVisit['latest_ts'] = int(row['time'])
+                            newVisit['latest_rssi'] = int(row['rssi'])
+                            newVisit['netname'] = row['NETNAME']
+                            theObservations[newMAC].append(newVisit)
+
+            else:
+                # if we have not seen it , time to create a visits array for that MAC if the RSSI is larger than initialRSSIThreshold
+                if int(row['rssi']) >= initialRSSIThreshold:
+                    theObservations[newMAC] = []
+                    firstVisit = {}
+                    firstVisit['first_ts'] = int(row['time'])
+                    firstVisit['latest_ts'] = int(row['time'])
+                    firstVisit['latest_rssi'] = int(row['rssi'])
+                    firstVisit['netname'] = row['NETNAME']
+                    theObservations[newMAC].append(firstVisit)
+
+    csvinputfile.close()
+    print("Done reading and mapping, starting to generate summary file...")
+
+    fieldnamesout = ['NETNAME', 'MAC', 'date', 'time', 'length']
+    with open('cmxSummary'+fileTS+'.csv', 'w', newline='') as csvoutputfile:
+        localTZ = timezone(theTimeZone)
+        writer = csv.DictWriter(csvoutputfile, fieldnames=fieldnamesout)
+        for theKey in theObservations:
+            for theVisitInstance in theObservations[theKey]:
+                theTime = datetime.fromtimestamp(theVisitInstance['first_ts'])
+                theLocalTime = theTime.astimezone(localTZ)
+                theDeltaSeconds = theVisitInstance['latest_ts'] - theVisitInstance['first_ts']
+                theVisitLength = round(theDeltaSeconds / 60, 2)
+                if theVisitLength >= minMinutesVisit:
+                    writer.writerow({'NETNAME': theVisitInstance['netname'],
+                                     'MAC': theKey,
+                                     'date': theLocalTime.strftime('%m/%d/%Y'),
+                                     'time': theLocalTime.strftime('%H:%M'),
+                                     'length': theVisitLength})
+    csvoutputfile.close()
+    print("Summary File generated.")
 
 
 # gets meraki devices
@@ -91,6 +174,7 @@ def get_validator():
 # Accept CMX JSON POST
 @app.route('/', methods=['POST'])
 def get_cmxJSON():
+    global csvfile, dayTracker, hourTracker, monthTracker, testTracker
     if not request.json or not 'data' in request.json:
         return("invalid data",400)
     cmxdata = request.json
@@ -110,6 +194,39 @@ def get_cmxJSON():
         return("invalid version",400)
     else:
         print("version verified: ", cmxdata['version'])
+
+    fileTS=''
+    if summaryTimePeriod!='M':
+        # check to see if it is time to generate summary
+        tz = timezone(theTimeZone)
+        theLocalTime = datetime.now(tz)
+        #based on the timePeriod we are testing for, generate the timeStamp for the summary file if the time has come
+        if summaryTimePeriod=='D':
+            if dayTracker!=theLocalTime.day:
+                fileTS=str(monthTracker)+'-'+str(dayTracker)
+                dayTracker=theLocalTime.day
+                hourTracker = theLocalTime.hour
+                testTracker = int(theLocalTime.minute / 10)
+        elif summaryTimePeriod=='H':
+            if hourTracker!=theLocalTime.hour:
+                fileTS=str(monthTracker)+'-'+str(dayTracker)+"-"+str(hourTracker)
+                dayTracker=theLocalTime.day
+                hourTracker = theLocalTime.hour
+                testTracker = int(theLocalTime.minute / 10)
+        elif summaryTimePeriod=='T':
+            if testTracker!=int(theLocalTime.minute/10):
+                fileTS=str(monthTracker)+'-'+str(dayTracker)+"-"+str(hourTracker)+str(testTracker)
+                dayTracker=theLocalTime.day
+                hourTracker = theLocalTime.hour
+                testTracker = int(theLocalTime.minute / 10)
+        #generate the summary and rename the old detailed file only if we are in new time period
+        if fileTS!='':
+            # close the detailed file
+            csvfile.close()
+            generateSummaryFile(fileTS)
+            # re-open the file to store the raw data
+            csvfile = open('cmxData.csv', 'wt')
+
 
     # Determine device type
     if cmxdata['type'] == "DevicesSeen":
@@ -132,6 +249,7 @@ def main(argv):
     global validator
     global secret
     global csvfile
+    global dayTracker, hourTracker, testTracker, monthTracker
 
     try:
        opts, args = getopt.getopt(argv,"hv:s:",["validator=","secret="])
@@ -168,6 +286,14 @@ def main(argv):
 
     print(devicesMapper)
     print(apNames)
+    #set the time periods where it starts to run to know when to do the summaries
+    tz = timezone(theTimeZone)
+    theLocalTime = datetime.now(tz)
+    monthTracker=theLocalTime.month
+    dayTracker=theLocalTime.day
+    hourTracker=theLocalTime.hour
+    testTracker=int(theLocalTime.minute/10)
+    print(testTracker)
 
 
 if __name__ == '__main__':

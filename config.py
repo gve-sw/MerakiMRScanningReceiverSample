@@ -9,3 +9,5 @@ visitorRSSIThreshold=10
 maxSecondsAwayNewVisit=120
 minMinutesVisit=5
 theTimeZone='US/Central'
+#how long to wait until running summary: Daily='D', Hourly='H', Test='T' (10 min interval), Manual='M'
+summaryTimePeriod='T'
