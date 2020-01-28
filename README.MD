@@ -24,7 +24,7 @@ More details on the Access Point MAC, Client MAC, Timestamp and RSSI fields can 
 https://developer.cisco.com/meraki/scanning-api/#!api-version-2-0/wifi-devices
 <br/>
 <br/>
-The 'cmxSummary.csv' file, which gets generated after running the cmxsummary.py script, contains the following for each row:
+The **cmxSummary.csv** file, which gets generated after running the cmxsummary.py script (if in Manual mode, or periodically by the main cmxreceiver.py script if not), contains the following for each row:
 <br/>
 <br/>
 ```Network Name, Client MAC, Visit Date (timezone adjusted), Visit Time (timezone adjusted), Visit Length (minutes)```
@@ -56,10 +56,14 @@ In that file, you must fill in the values for the following variables:
 **ORG_ID**: This is the Organization ID you wish to use from which to consider all encompassing networks to search for cameras.<br/>
 **validator**: The validator key that can be found in the Meraki dashboard by navigating to **Network-wide > General. Scroll down to “Location and Analytics” to copy and paste this validator key into code (ensure analytics and scanning API are enabled)<br/>
 
+You can also change the value for **summaryTimePeriod** which controls how often the code generates a summary of visits: 
+ Daily='D', Hourly='H', Test='T' (10 min interval), Manual='M' (you have to run cmxsummary.py manually to generate the summary if you configure it with this last option)
+
 
 ---
-## Meraki CMX Access point Setup
-Cisco Meraki CMX Receiver is a simple example demonstrating how to interact with the CMX API.<br/>
+## Local machine configuration and Meraki CMX Access point Setup
+
+This Meraki CMX receiver sample is a simple example demonstrating how to interact with the CMX API.<br/>
 This is how it works:
 - Meraki access points will listen for WiFi clients that are searching for a network to join and log the events.
 - The "observations" are then collected temporarily in the cloud where additional information can be added to
@@ -68,19 +72,17 @@ the event, such as GPS, X Y coordinates and additional client details.
 the Meraki network's validator.
 - Meraki will then send a JSON message to this application's POST URL (i.e. http://yourserver/ method=[POST])
 - The JSON is checked to ensure it matches the expected secret, version and observation device type.
-- The resulting data is sent to the "save_data(data)" function where it can be sent to a database or other service
-Default port: 5000
 
 Cisco Meraki CMX Documentation
 https://documentation.meraki.com/MR/Monitoring_and_Reporting/CMX_Analytics#CMX_Location_API
 
----
-## Local machine configuration
+More details on configuring the Meraki Dashboard for the Scanning API can be found here:
+https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-scanning-api
 
-The **cmxreceiver.py** python script implements a web server that needs to have a publicly addressable address so that it can
+Specifically for this example, **cmxreceiver.py** python script implements a web server that needs to have a publicly addressable address so that it can
 be configured as a webhook on the Meraki Dashboard API. If you wish to run it on a machine behind a corporate firewall such as a
 PC or laptop connected to a corporate network you need to use a utility such as Ngrok to open a "pinhole" on the firewall to be able
-to redirect traffic to the script. Not all organizations support the use of ngrok or other similar utilities and it is definietely not
+to redirect traffic to the script. Not all organizations support the use of ngrok or other similar utilities and it is definitely not
 recommended to use in a production environment. But for quick testing it can be quite useful. Here is how you use it:
 <br/><br/>
 
@@ -90,12 +92,10 @@ recommended to use in a production environment. But for quick testing it can be 
 4. Copy and paste this url into the “Post URL” section of “Location and Analytics” in the Meraki Dashboard
 5. Note that the validate button should fail at this point as the the cmx receiver is not up and running
 
-More details on configuring the Meraki Dashboard for the Scanning API can be found here:
-https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-scanning-api
 
 
 ---
- ## Running the scripts
+## Running the scripts
 
 1. Make sure Python 3 is installed
 2. Make sure pip is installed (https://pip.pypa.io/en/stable/installing/ for more information on pip)
@@ -105,3 +105,6 @@ https://developer.cisco.com/meraki/scanning-api/#!enable-scanning-api/enable-sca
 6. In a new terminal window, enter ```python3 cmxreceiver.py``` (note at this point the validate button in the Meraki dashboard should be working, data will stream every minute or so)
 7. Once you are done collecting observations with the **cmxreceiver.py** script or while collecting, you can run the **cmxsummary.py** script to generate
 the list of unique visitors in **cmxSummary.csv**. To run it, enter ```python3 cmxsummary.py``` in the command line.
+
+### NOTE
+Currently, if a device in a network does not have a name in the Dashboar, the script will error out during setup since it is depending on those to identify each device in the output file. Just make sure that all devices have names. In a future version we will use the device ID as the name if missing. 
