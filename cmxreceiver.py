@@ -22,7 +22,7 @@ import sys, getopt
 from datetime import datetime
 import csv
 import shutil
-import json, requests, os
+import json, requests, os, time
 from config import ORG_ID, MERAKI_API_KEY, validator
 
 from pytz import timezone
@@ -278,9 +278,11 @@ def main(argv):
     #retrieve all access points from all networks to map them in memory to their corresponding network and device name
     for network in theNetworks:
         devices_data=getDevices(network['id'])
+        time.sleep(0.25)
         theDevices = json.loads(devices_data)
         for device in theDevices:
             if device['model'][:2]=='MR':
+                print("========> Here is the data for just one device: ", json.dumps(device, indent=4, sort_keys=True))
                 devicesMapper[device['mac']]=network['name']
                 apNames[device['mac']]=device['name']
 
