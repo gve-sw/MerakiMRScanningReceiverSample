@@ -40,14 +40,24 @@ csvfile = None
 devicesMapper={}
 apNames={}
 
+def setTimeTrackers():
+    global dayTracker, hourTracker, monthTracker, testTracker, yearTracker
+    tz = timezone(theTimeZone)
+    theLocalTime = datetime.now(tz)
+    yearTracker=theLocalTime.year
+    monthTracker=theLocalTime.month
+    dayTracker=theLocalTime.day
+    hourTracker=theLocalTime.hour
+    testTracker=int(theLocalTime.minute/10)
 
 def generateSummaryFile(fileTS):
 
     theObservations = {}
     fieldnamesin = ['NETNAME', 'APNAME', 'APMAC', 'MAC', 'time', 'rssi']
+    newFileName=fileTS+r'-cmxData.csv'
     os.rename(r'cmxData.csv',
-              r'cmxData' + fileTS + '.csv')
-    with open('cmxData' + fileTS + '.csv', newline='') as csvinputfile:
+              newFileName)
+    with open(newFileName, newline='') as csvinputfile:
         datareader = csv.DictReader(csvinputfile, fieldnames=fieldnamesin)
         for row in datareader:
             # print(row['NETNAME'], row['APNAME'],row['APMAC'], row['MAC'], row['time'], row['rssi'])
@@ -98,7 +108,8 @@ def generateSummaryFile(fileTS):
     print("Done reading and mapping, starting to generate summary file...")
 
     fieldnamesout = ['NETNAME', 'MAC', 'date', 'time', 'length']
-    with open('cmxSummary'+fileTS+'.csv', 'w', newline='') as csvoutputfile:
+    newSummaryFileName=fileTS+'-cmxSummary.csv'
+    with open(newSummaryFileName, 'w', newline='') as csvoutputfile:
         localTZ = timezone(theTimeZone)
         writer = csv.DictWriter(csvoutputfile, fieldnames=fieldnamesout)
         for theKey in theObservations:
@@ -174,7 +185,7 @@ def get_validator():
 # Accept CMX JSON POST
 @app.route('/', methods=['POST'])
 def get_cmxJSON():
-    global csvfile, dayTracker, hourTracker, monthTracker, testTracker
+    global csvfile, dayTracker, hourTracker, monthTracker, testTracker, yearTracker
     if not request.json or not 'data' in request.json:
         return("invalid data",400)
     cmxdata = request.json
@@ -203,22 +214,16 @@ def get_cmxJSON():
         #based on the timePeriod we are testing for, generate the timeStamp for the summary file if the time has come
         if summaryTimePeriod=='D':
             if dayTracker!=theLocalTime.day:
-                fileTS=str(monthTracker)+'-'+str(dayTracker)
-                dayTracker=theLocalTime.day
-                hourTracker = theLocalTime.hour
-                testTracker = int(theLocalTime.minute / 10)
+                fileTS=str(yearTracker)+'-'+str(monthTracker).zfill(2)+'-'+str(dayTracker).zfill(2)
+                setTimeTrackers()
         elif summaryTimePeriod=='H':
             if hourTracker!=theLocalTime.hour:
-                fileTS=str(monthTracker)+'-'+str(dayTracker)+"-"+str(hourTracker)
-                dayTracker=theLocalTime.day
-                hourTracker = theLocalTime.hour
-                testTracker = int(theLocalTime.minute / 10)
+                fileTS=str(yearTracker)+'-'+str(monthTracker).zfill(2)+'-'+str(dayTracker).zfill(2)+"-"+str(hourTracker).zfill(2)
+                setTimeTrackers()
         elif summaryTimePeriod=='T':
             if testTracker!=int(theLocalTime.minute/10):
-                fileTS=str(monthTracker)+'-'+str(dayTracker)+"-"+str(hourTracker)+str(testTracker)
-                dayTracker=theLocalTime.day
-                hourTracker = theLocalTime.hour
-                testTracker = int(theLocalTime.minute / 10)
+                fileTS=str(yearTracker)+'-'+str(monthTracker).zfill(2)+'-'+str(dayTracker).zfill(2)+"-"+str(hourTracker).zfill(2)+str(testTracker)
+                setTimeTrackers()
         #generate the summary and rename the old detailed file only if we are in new time period
         if fileTS!='':
             # close the detailed file
@@ -249,7 +254,7 @@ def main(argv):
     global validator
     global secret
     global csvfile
-    global dayTracker, hourTracker, testTracker, monthTracker
+    global dayTracker, hourTracker, testTracker, monthTracker, yearTracker
 
     try:
        opts, args = getopt.getopt(argv,"hv:s:",["validator=","secret="])
@@ -289,12 +294,7 @@ def main(argv):
     print(devicesMapper)
     print(apNames)
     #set the time periods where it starts to run to know when to do the summaries
-    tz = timezone(theTimeZone)
-    theLocalTime = datetime.now(tz)
-    monthTracker=theLocalTime.month
-    dayTracker=theLocalTime.day
-    hourTracker=theLocalTime.hour
-    testTracker=int(theLocalTime.minute/10)
+    setTimeTrackers()
     print(testTracker)
 
 
