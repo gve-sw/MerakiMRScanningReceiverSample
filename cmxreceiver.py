@@ -105,6 +105,13 @@ def generateSummaryFile(fileTS):
                     theObservations[newMAC].append(firstVisit)
 
     csvinputfile.close()
+
+# Data File Removal: comment out next 4 lines to retain detailed data files after summary generation
+    if os.path.exists(newFileName):
+        os.remove(newFileName)
+    else:
+        print("The "+newFileName+" data file does not exist.")
+
     print("Done reading and mapping, starting to generate summary file...")
 
     fieldnamesout = ['NETNAME', 'MAC', 'date', 'time', 'length']

@@ -106,5 +106,10 @@ recommended to use in a production environment. But for quick testing it can be 
 7. Once you are done collecting observations with the **cmxreceiver.py** script or while collecting, you can run the **cmxsummary.py** script to generate
 the list of unique visitors in **cmxSummary.csv**. To run it, enter ```python3 cmxsummary.py``` in the command line.
 
-### NOTE
+### NOTE 1
 Currently, if a device in a network does not have a name in the Dashboar, the script will error out during setup since it is depending on those to identify each device in the output file. Just make sure that all devices have names. In a future version we will use the device ID as the name if missing. 
+
+### NOTE 2 
+The code removes detailed data collection files when it generates periodic summaries.
+If you wish to retain them, look for commented line in cmxreceiver.py that starts with  "Data File Removal" 
+and comment out the 4 lines of code below it. 
