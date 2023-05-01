@@ -1,4 +1,4 @@
 requests==2.20.1
 pytz==2018.5
-Flask==1.0.2
+Flask==2.3.2
 tzlocal==2.0.0
